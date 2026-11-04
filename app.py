@@ -9,7 +9,7 @@ gc.collect()
 
 app = Flask(__name__)
 
-# Load YOLO secara opsional / aman
+# Load YOLOv8 secara safe / ringkas
 MODEL_PATH = os.path.join(os.path.dirname(__file__), 'yolov8n.pt')
 yolo_model = None
 
@@ -24,8 +24,6 @@ except Exception as e:
 VEHICLE_CLASSES = [2, 3, 5, 7] # car, motorcycle, bus, truck
 
 def generate_frames(stream_url):
-    """Generator stream yang aman dari timeout OpenCV"""
-    # Beri opsi open via backend FFMPEG
     cap = cv2.VideoCapture(stream_url, cv2.CAP_FFMPEG)
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
@@ -36,18 +34,14 @@ def generate_frames(stream_url):
         if not success:
             fail_count += 1
             time.sleep(0.5)
-            # Jika gagal 5x berturut-turut, coba hubungi ulang stream
             if fail_count > 5:
                 cap.open(stream_url, cv2.CAP_FFMPEG)
                 fail_count = 0
             continue
         
         fail_count = 0
-        
-        # Resize frame agar hemat RAM Render (512MB limit)
         frame = cv2.resize(frame, (640, 360))
 
-        # Deteksi YOLO jika model tersedia
         if yolo_model is not None:
             try:
                 results = yolo_model(frame, verbose=False, imgsz=320)
@@ -64,7 +58,6 @@ def generate_frames(stream_url):
             except Exception:
                 pass
 
-        # Compress ke JPEG hemat resource
         ret, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 60])
         if not ret:
             continue
@@ -86,7 +79,7 @@ def video_feed():
         url = "https://dev.cctv.magelangkota.go.id/memfs/342540b3-545c-41a4-b3a2-624f7d824cdc_output_0.m3u8"
     return Response(generate_frames(url), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-# Endpoint API Pendukung Fitur Dashboard
+# Endpoint API Dashboard
 @app.route('/api/pothole_counts')
 def pothole_counts():
     return jsonify({"potholes": 4, "cracks": 2, "status": "Waspada"})
@@ -97,7 +90,7 @@ def parking_counts():
 
 @app.route('/api/traffic_counts')
 def traffic_counts():
-    return jsonify({"motorcycle": 128, "car": 42, "bus": 3, "truck": 5})
+    return jsonify({"motorcycle": 128, "car": 42, "bus": 8, "status": "Lancar"})
 
 @app.route('/api/lhr_pkji', methods=['POST'])
 def hitung_lhr_pkji():
@@ -116,7 +109,7 @@ def hitung_lhr_pkji():
         elif ds <= 0.75: los = "C (Stabil)"
         elif ds <= 0.85: los = "D (Mendekati Jenuh)"
         elif ds <= 1.00: los = "E (Jenuh/Macet)"
-        else: los = "F (Macet Total)"
+        else: los = "F (Macet Total / Antrean)"
 
         return jsonify({"status": "success", "q_smp": round(q_smp, 2), "ds": round(ds, 3), "los": los})
     except Exception as e:
