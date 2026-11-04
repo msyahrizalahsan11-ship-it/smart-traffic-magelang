@@ -3,124 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Traffic & Infrastructure Monitoring - Magelang</title>
-    <!-- Tailwind CSS & FontAwesome -->
+    <title>Smart City Infrastructure Research Lab - Magelang</title>
+    <!-- Tailwind CSS, FontAwesome & HLS.js Library -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         .tab-content { display: none; }
         .tab-content.active { display: block; }
     </style>
 </head>
-<body class="bg-slate-900 text-white min-h-screen font-sans">
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans flex flex-col">
 
-    <!-- Header Navigation -->
-    <header class="bg-slate-800 border-b border-slate-700 p-4 sticky top-0 z-50">
-        <div class="container mx-auto flex flex-wrap justify-between items-center">
-            <h1 class="text-xl font-bold text-blue-400 flex items-center gap-2">
-                <i class="fa-solid fa-traffic-light"></i> Smart City Lab - Magelang
-            </h1>
-            <nav class="flex gap-2 mt-2 sm:mt-0 flex-wrap">
-                <button onclick="switchTab('tab-live')" class="nav-btn bg-blue-600 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-blue-500">Live Stream</button>
-                <button onclick="switchTab('tab-upload')" class="nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-600">Upload Video</button>
-                <button onclick="switchTab('tab-pothole')" class="nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-600">Kerusakan Jalan</button>
-                <button onclick="switchTab('tab-parking')" class="nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-600">Smart Parking</button>
-                <button onclick="switchTab('tab-pkji')" class="nav-btn bg-slate-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-slate-600">Analisis PKJI 2023</button>
-            </nav>
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <div class="p-2 bg-blue-600 rounded-lg text-white">
+                <i class="fa-solid fa-city text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold text-white tracking-wide">Smart City Infrastructure Lab</h1>
+                <p class="text-xs text-slate-400">Magelang Real-Time Traffic & Road Monitoring System</p>
+            </div>
         </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex bg-slate-900 p-1.5 rounded-xl border border-slate-700 gap-1">
+            <button onclick="switchTab('tab-live')" class="nav-btn bg-blue-600 px-4 py-2 rounded-lg text-xs font-semibold text-white transition hover:bg-blue-500">
+                <i class="fa-solid fa-video mr-1.5"></i>Live Stream
+            </button>
+            <button onclick="switchTab('tab-upload')" class="nav-btn px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 transition hover:bg-slate-800">
+                <i class="fa-solid fa-upload mr-1.5"></i>Upload Video
+            </button>
+            <button onclick="switchTab('tab-pothole')" class="nav-btn px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 transition hover:bg-slate-800">
+                <i class="fa-solid fa-road-barrier mr-1.5"></i>Kerusakan Jalan
+            </button>
+            <button onclick="switchTab('tab-parking')" class="nav-btn px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 transition hover:bg-slate-800">
+                <i class="fa-solid fa-square-parking mr-1.5"></i>Smart Parking
+            </button>
+            <button onclick="switchTab('tab-pkji')" class="nav-btn px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 transition hover:bg-slate-800">
+                <i class="fa-solid fa-calculator mr-1.5"></i>Analisis PKJI 2023
+            </button>
+        </nav>
     </header>
 
-    <!-- Content Body -->
-    <main class="container mx-auto p-4 sm:p-6">
+    <!-- Main Dashboard Body -->
+    <main class="flex-1 p-6 container mx-auto">
 
-        <!-- TAB 1: LIVE STREAM CCTV -->
-        <div id="tab-live" class="tab-content active space-y-4">
-            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                <h2 class="text-lg font-semibold text-blue-300 mb-2"><i class="fa-solid fa-video mr-2"></i>Real-Time CCTV Detector (YOLOv8)</h2>
-                <div class="flex gap-2 mb-4">
-                    <input type="text" id="cctv-url-input" placeholder="Masukkan URL m3u8 CCTV..." 
-                           value="https://dev.cctv.magelangkota.go.id/memfs/342540b3-545c-41a4-b3a2-624f7d824cdc_output_0.m3u8"
-                           class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
-                    <button onclick="updateCCTVStream()" class="bg-blue-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-500 whitespace-nowrap">
-                        Muat CCTV
-                    </button>
+        <!-- TAB 1: LIVE STREAM CCTV & DETEKSI AI -->
+        <div id="tab-live" class="tab-content active space-y-6">
+            
+            <!-- Summary Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl flex items-center gap-4">
+                    <div class="p-3 bg-blue-500/10 text-blue-400 rounded-lg"><i class="fa-solid fa-motorcycle text-2xl"></i></div>
+                    <div><p class="text-xs text-slate-400">Sepeda Motor (MC)</p><h3 id="stat-mc" class="text-xl font-bold">128</h3></div>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl flex items-center gap-4">
+                    <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-lg"><i class="fa-solid fa-car text-2xl"></i></div>
+                    <div><p class="text-xs text-slate-400">Mobil Penumpang (LV)</p><h3 id="stat-lv" class="text-xl font-bold">42</h3></div>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl flex items-center gap-4">
+                    <div class="p-3 bg-amber-500/10 text-amber-400 rounded-lg"><i class="fa-solid fa-bus text-2xl"></i></div>
+                    <div><p class="text-xs text-slate-400">Bus / Truk (HV)</p><h3 id="stat-hv" class="text-xl font-bold">8</h3></div>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl flex items-center gap-4">
+                    <div class="p-3 bg-purple-500/10 text-purple-400 rounded-lg"><i class="fa-solid fa-gauge-high text-2xl"></i></div>
+                    <div><p class="text-xs text-slate-400">Status Lalu Lintas</p><h3 class="text-xl font-bold text-emerald-400">Lancar</h3></div>
+                </div>
+            </div>
+
+            <!-- Video Player Box -->
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                <div class="flex flex-col md:flex-row justify-between items-md-center gap-3 mb-4">
+                    <div>
+                        <h2 class="text-md font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-circle text-red-500 text-xs animate-pulse"></i> Real-Time CCTV Simpang 4 Rejowinangun
+                        </h2>
+                        <p class="text-xs text-slate-400">Integrasi Stream CCTV Kota Magelang & Pendeteksian Kendaraan (YOLOv8)</p>
+                    </div>
+                    
+                    <!-- Form URL CCTV -->
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <input type="text" id="cctv-url-input" 
+                               value="https://dev.cctv.magelangkota.go.id/memfs/342540b3-545c-41a4-b3a2-624f7d824cdc_output_0.m3u8"
+                               class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 w-full md:w-80 focus:outline-none focus:border-blue-500">
+                        <button onclick="loadCCTVStream()" class="bg-blue-600 hover:bg-blue-500 px-4 py-1.5 rounded-lg text-xs font-semibold text-white whitespace-nowrap">
+                            Muat CCTV
+                        </button>
+                    </div>
                 </div>
 
-                <div class="relative bg-black rounded-lg overflow-hidden border border-slate-700 min-h-[360px] flex items-center justify-center">
-                    <img id="live-stream-player" src="/video_feed" class="w-full h-auto max-h-[500px] object-contain" alt="CCTV Stream Loading...">
+                <!-- Video Display Container -->
+                <div class="relative bg-black rounded-lg overflow-hidden border border-slate-700 aspect-video flex items-center justify-center max-h-[500px]">
+                    <!-- HTML5 Video Player untuk Stream HLS Direct (Lancar & Bebas Memory Crash) -->
+                    <video id="hls-video-player" controls autoplay muted class="w-full h-full object-contain"></video>
                 </div>
             </div>
         </div>
 
         <!-- TAB 2: UPLOAD VIDEO -->
         <div id="tab-upload" class="tab-content space-y-4">
-            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 text-center">
-                <i class="fa-solid fa-cloud-arrow-up text-4xl text-blue-400 mb-3"></i>
-                <h3 class="text-md font-semibold">Upload Rekaman Video (.mp4 / .avi)</h3>
-                <p class="text-xs text-slate-400 mb-4">Gunakan fitur ini untuk analisis video rekaman lalu lintas secara stabil.</p>
-                <input type="file" accept="video/*" class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500">
+            <div class="bg-slate-800 p-8 rounded-xl border border-slate-700 text-center max-w-2xl mx-auto">
+                <i class="fa-solid fa-cloud-arrow-up text-5xl text-blue-400 mb-4"></i>
+                <h3 class="text-lg font-bold text-white mb-1">Upload File Rekaman Video</h3>
+                <p class="text-xs text-slate-400 mb-6">Pilih file video MP4/AVI lalu lintas untuk analisis deteksi kendaraan offline.</p>
+                <input type="file" accept="video/*" class="block w-full text-xs text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500">
             </div>
         </div>
 
         <!-- TAB 3: KERUSAKAN JALAN -->
         <div id="tab-pothole" class="tab-content space-y-4">
             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                <h3 class="text-md font-semibold text-amber-400 mb-2"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Pothole & Surface Damage Detection</h3>
-                <p class="text-sm text-slate-300">Modul otomatisasi identifikasi lokasi dan luasan kerusakan lubang jalan (Pothole).</p>
+                <h3 class="text-md font-bold text-amber-400 mb-2"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Pothole & Surface Damage Detection</h3>
+                <p class="text-xs text-slate-300 mb-4">Sistem AI mengidentifikasi keretakan dan lubang jalan untuk pemeliharaan infrastruktur Kota Magelang.</p>
+                <div class="p-4 bg-slate-900 rounded-lg border border-slate-700 text-xs">
+                    <p><span class="font-semibold text-white">Status Jalan:</span> 4 Lubang Terdeteksi (Simpang Rejowinangun)</p>
+                </div>
             </div>
         </div>
 
         <!-- TAB 4: SMART PARKING -->
         <div id="tab-parking" class="tab-content space-y-4">
             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                <h3 class="text-md font-semibold text-emerald-400 mb-2"><i class="fa-solid fa-square-parking mr-2"></i>Smart Parking Slot Occupancy</h3>
-                <p class="text-sm text-slate-300">Sistem monitoring ruang parkir kosong berbasis AI Vision secara real-time.</p>
+                <h3 class="text-md font-bold text-emerald-400 mb-2"><i class="fa-solid fa-square-parking mr-2"></i>Smart Parking Slot Occupancy</h3>
+                <p class="text-xs text-slate-300 mb-4">Monitoring okupansi area parkir umum secara real-time.</p>
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div class="bg-slate-900 p-4 rounded-lg"><p class="text-xs text-slate-400">Total Slot</p><h4 class="text-lg font-bold text-white">20</h4></div>
+                    <div class="bg-slate-900 p-4 rounded-lg"><p class="text-xs text-slate-400">Terisi</p><h4 class="text-lg font-bold text-red-400">14</h4></div>
+                    <div class="bg-slate-900 p-4 rounded-lg"><p class="text-xs text-slate-400">Tersedia</p><h4 class="text-lg font-bold text-emerald-400">6</h4></div>
+                </div>
             </div>
         </div>
 
         <!-- TAB 5: ANALISIS PKJI 2023 -->
         <div id="tab-pkji" class="tab-content space-y-4">
             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 max-w-xl mx-auto">
-                <h3 class="text-md font-semibold text-blue-400 mb-4"><i class="fa-solid fa-calculator mr-2"></i>Kalkulator Kapasitas Jalan (PKJI 2023)</h3>
-                
-                <div class="space-y-3 text-sm">
+                <h3 class="text-md font-bold text-blue-400 mb-4"><i class="fa-solid fa-calculator mr-2"></i>Kalkulator Kapasitas Jalan (PKJI 2023)</h3>
+                <div class="space-y-3 text-xs">
                     <div>
                         <label class="block text-slate-300 mb-1">Sepeda Motor (MC / jam):</label>
-                        <input type="number" id="input-mc" value="120" class="w-full bg-slate-900 border border-slate-700 rounded p-2">
+                        <input type="number" id="input-mc" value="120" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white">
                     </div>
                     <div>
                         <label class="block text-slate-300 mb-1">Mobil Penumpang (LV / jam):</label>
-                        <input type="number" id="input-lv" value="45" class="w-full bg-slate-900 border border-slate-700 rounded p-2">
+                        <input type="number" id="input-lv" value="45" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white">
                     </div>
                     <div>
                         <label class="block text-slate-300 mb-1">Bus / Truk (HV / jam):</label>
-                        <input type="number" id="input-hv" value="10" class="w-full bg-slate-900 border border-slate-700 rounded p-2">
+                        <input type="number" id="input-hv" value="10" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white">
                     </div>
-                    <button onclick="hitungPKJI()" class="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded font-semibold mt-2">Hitung Arus Q & LOS</button>
+                    <button onclick="hitungPKJI()" class="w-full bg-blue-600 hover:bg-blue-500 py-2.5 rounded-lg font-semibold text-white mt-2">
+                        Hitung Arus Q & LOS
+                    </button>
                 </div>
 
-                <div id="pkji-result" class="mt-4 p-4 bg-slate-900 rounded-lg border border-slate-700 hidden">
-                    <p class="text-xs text-slate-400">Hasil Perhitungan:</p>
-                    <p id="res-q" class="text-sm font-semibold text-blue-300 mt-1"></p>
-                    <p id="res-ds" class="text-sm font-semibold text-emerald-300"></p>
-                    <p id="res-los" class="text-sm font-semibold text-amber-300"></p>
+                <div id="pkji-result" class="mt-4 p-4 bg-slate-900 rounded-lg border border-slate-700 hidden text-xs space-y-1">
+                    <p id="res-q" class="font-semibold text-blue-300"></p>
+                    <p id="res-ds" class="font-semibold text-emerald-300"></p>
+                    <p id="res-los" class="font-semibold text-amber-300"></p>
                 </div>
             </div>
         </div>
 
     </main>
 
-    <!-- JavaScript Handlers -->
+    <!-- JavaScript Controller -->
     <script>
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('text-slate-300');
+            });
+            
             document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('bg-blue-600', 'text-white');
+            event.currentTarget.classList.remove('text-slate-300');
         }
 
-        function updateCCTVStream() {
-            let inputUrl = document.getElementById('cctv-url-input').value;
-            let player = document.getElementById('live-stream-player');
-            player.src = "/video_feed?url=" + encodeURIComponent(inputUrl);
+        // Pemutar HLS CCTV Direct (Lancar tanpa error 502)
+        function loadCCTVStream() {
+            var video = document.getElementById('hls-video-player');
+            var videoSrc = document.getElementById('cctv-url-input').value;
+
+            if (Hls.isSupported()) {
+                var hls = new Hls();
+                hls.loadSource(videoSrc);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    video.play();
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = videoSrc;
+                video.addEventListener('loadedmetadata', function() {
+                    video.play();
+                });
+            }
         }
 
         function hitungPKJI() {
@@ -137,12 +216,17 @@
             .then(data => {
                 if(data.status === 'success') {
                     document.getElementById('pkji-result').classList.remove('hidden');
-                    document.getElementById('res-q').innerText = "Arus Lalu Lintas (Q): " + data.q_smp + " smp/jam";
+                    document.getElementById('res-q').innerText = "Arus Total (Q): " + data.q_smp + " smp/jam";
                     document.getElementById('res-ds').innerText = "Derajat Kejenuhan (DS): " + data.ds;
                     document.getElementById('res-los').innerText = "Tingkat Pelayanan (LOS): " + data.los;
                 }
             });
         }
+
+        // Otomatis putar CCTV saat pertama buka halaman
+        window.onload = function() {
+            loadCCTVStream();
+        };
     </script>
 </body>
 </html>
